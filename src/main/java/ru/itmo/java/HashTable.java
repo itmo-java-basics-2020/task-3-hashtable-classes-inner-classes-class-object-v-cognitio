@@ -2,6 +2,9 @@ package ru.itmo.java;
 
 public class HashTable {
 
+    private static final int BASE_INITIAL_CAPACITY = 512;
+    private static final float BASE_LOAD_FACTOR = 0.5f;
+
     private final double loadFactor;
 
     private int threshold;
@@ -10,20 +13,10 @@ public class HashTable {
 
     private Entry[] data;
 
-
-
-
     public HashTable(int initialCapacity, double loadFactor) {
         this.capacity = initialCapacity;
 
-        int twoDegreeCapacity = 1;
-        while (true) {
-            if (twoDegreeCapacity >= capacity) {
-                capacity = twoDegreeCapacity;
-                break;
-            }
-            twoDegreeCapacity *= 2;
-        }
+        fitTable();
 
         this.loadFactor = loadFactor;
         this.threshold = (int) (capacity * loadFactor);
@@ -37,19 +30,29 @@ public class HashTable {
     }
 
     public HashTable() {
-        this(512, 0.5);
+        this(BASE_INITIAL_CAPACITY, BASE_LOAD_FACTOR);
+    }
+
+    private void fitTable() {
+        int twoDegreeCapacity = 1;
+        while (true) {
+            if (twoDegreeCapacity >= capacity) {
+                capacity = twoDegreeCapacity;
+                break;
+            }
+            twoDegreeCapacity *= 2;
+        }
     }
 
     public Object put(Object key, Object value) {
         Object returnRef = null;
 
-        int index = find(data, key,true);
+        int index = find(data, key, true);
         if (index != -1) {
             returnRef = data[index].value;
             data[index].value = value;
-        }
-        else {
-            index = find(data, key,false);
+        } else {
+            index = find(data, key, false);
             data[index] = new Entry(key, value);
             ++size;
         }
@@ -65,8 +68,7 @@ public class HashTable {
         int index = find(data, key, true);
         if (index != -1) {
             return data[index].value;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -77,8 +79,7 @@ public class HashTable {
             data[index].deleted = true;
             --size;
             return data[index].value;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -86,9 +87,6 @@ public class HashTable {
     public int size() {
         return size;
     }
-
-
-
 
     private int getBaseHash(Object key) {
         return Math.abs(key.hashCode());
@@ -102,27 +100,14 @@ public class HashTable {
             ++searchInterval;
             int currentHash = (baseHash + searchInterval * searchInterval) % array.length;
             if (array[currentHash] == null) {
+                return checkExisting ? -1 : currentHash;
+            } else if (array[currentHash].key.equals(key)) {
                 if (checkExisting) {
-                    return -1;
-                }
-                else {
+                    return !array[currentHash].deleted ? currentHash : -1;
+                } else {
                     return currentHash;
                 }
-            }
-            else if (array[currentHash].key.equals(key)) {
-                if (checkExisting) {
-                    if (!array[currentHash].deleted) {
-                        return currentHash;
-                    }
-                    else {
-                        return -1;
-                    }
-                }
-                else {
-                    return currentHash;
-                }
-            }
-            else if (!checkExisting && array[currentHash].deleted) {
+            } else if (!checkExisting && array[currentHash].deleted) {
                 return currentHash;
             }
         }
@@ -154,9 +139,6 @@ public class HashTable {
 
         data = tempArray;
     }
-
-
-
 
     private static class Entry {
 
