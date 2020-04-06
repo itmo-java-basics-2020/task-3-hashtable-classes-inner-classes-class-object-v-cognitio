@@ -14,10 +14,7 @@ public class HashTable {
     private Entry[] data;
 
     public HashTable(int initialCapacity, double loadFactor) {
-        this.capacity = initialCapacity;
-
-        fitTable();
-
+        this.capacity = fitTable(initialCapacity);
         this.loadFactor = loadFactor;
         this.threshold = (int) (capacity * loadFactor);
         this.size = 0;
@@ -31,17 +28,6 @@ public class HashTable {
 
     public HashTable() {
         this(BASE_INITIAL_CAPACITY, BASE_LOAD_FACTOR);
-    }
-
-    private void fitTable() {
-        int twoDegreeCapacity = 1;
-        while (true) {
-            if (twoDegreeCapacity >= capacity) {
-                capacity = twoDegreeCapacity;
-                break;
-            }
-            twoDegreeCapacity *= 2;
-        }
     }
 
     public Object put(Object key, Object value) {
@@ -86,6 +72,19 @@ public class HashTable {
 
     public int size() {
         return size;
+    }
+
+    static private int fitTable(int capacity) {
+        int twoDegreeCapacity = 1;
+        while (true) {
+            if (twoDegreeCapacity >= capacity) {
+                capacity = twoDegreeCapacity;
+                break;
+            }
+            twoDegreeCapacity *= 2;
+        }
+
+        return capacity;
     }
 
     private int getBaseHash(Object key) {
